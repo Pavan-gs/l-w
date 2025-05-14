@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Wed May 14 15:28:10 2025
+
+@author: admin
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Sat Sep 28 15:16:28 2024
 
 @author: admin
@@ -118,6 +125,9 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
+
+
+
 # Build the ANN model
 model = Sequential()
 
@@ -135,9 +145,44 @@ history = model.fit(X_train_scaled, y_train, epochs=500, batch_size=32, validati
 predictions = model.predict(X_test_scaled)
 predictions = (predictions > 0.5).astype(int)  # Convert probabilities to binary predictions
 
+pd.crosstab(y_test, predictions.reshape(1,-1))
+X_test_scaled.shape
+
 # Plot the training and validation loss
 plt.figure(figsize=(12, 5))
 
+# Plot for Loss
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Loss over Epochs')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+
+# Plot for Accuracy
+plt.subplot(1, 2, 2)
+plt.plot(history.history['precision'], label='Training precision')
+plt.plot(history.history['val_precision'], label='Validation precision')
+plt.title('precision over Epochs')
+plt.xlabel('Epochs')
+plt.ylabel('precision')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Visualize the weights of the first hidden layer
+weights, biases = model.layers[0].get_weights()
+plt.figure(figsize=(10, 6))
+plt.imshow(weights, aspect='auto', cmap='viridis')
+plt.colorbar()
+plt.title('Weights of First Hidden Layer')
+plt.xlabel('Neurons')
+plt.ylabel('Input Features')
+plt.show()
+
+print("Model training complete and results visualized.")
 
 
 
