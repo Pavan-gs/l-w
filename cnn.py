@@ -1,103 +1,89 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from tensorflow import keras
-import tensorflow
-from tensorflow.keras import layers
+# Convolutional Neural Network
 
-# CNN --> Convolve / Convolution
+# Installing Theano
+# pip install --upgrade --no-deps git+git://github.com/Theano/Theano.git
 
-# Feature detector/Kernel/Filter --> Weights
+# Installing Tensorflow
+# pip install tensorflow
 
-# Convolution --> Linear operation where multiplication of a set of weights with the input data takes place
+# Installing Keras
+# pip install --upgrade keras
 
-# Kernel/Feature map : Output of the one filter applied to the previous layer
-# Max pooling, Flattening, Zero padding, Fully connected layer
+# Part 1 - Building the CNN
 
-# Channels --> RGB (3), Grayscale (1)
-# Size --> 28*28, 32*32, 64*64
-
-# An image is between 0-255 pixels
-
-from keras.datasets import mnist, fashion_mnist, cifar10
-c = cifar10.load_data()
-
-(xtrain,ytrain),(xtest,ytest) = cifar10.load_data()
-
-for i in range(9):
-    plt.subplot(2,5,i+1)
-    plt.imshow(xtrain[i],cmap=plt.get_cmap('gray'))
-    plt.show()
-    
-# Pre-processing
-from keras.utils import to_categorical
-ytrain = to_categorical((ytrain))
-ytest = to_categorical(ytest)
-
-train_norm = xtrain.astype('float32')
-test_norm =xtest.astype('float32')
-
-train_norm = train_norm/255.0
-test_norm = test_norm/255.0
-
+# Importing the Keras libraries and packages
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, BatchNormalization
-from keras.layers import Conv2D, MaxPooling2D, Flatten
+from keras.layers import Conv2D
+from keras.layers import MaxPooling2D
+from keras.layers import Flatten
+from keras.layers import Dense
 
-model = Sequential()
-model.add(Conv2D(32,(3,3), activation='relu', input_shape=(32,32,3)))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(2,2))
+# Initialising the CNN
+classifier = Sequential()
 
-model.add(Conv2D(64,(3,3), activation='relu', input_shape=(32,32,3)))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(2,2))
+# Step 1 - Convolution
+classifier.add(Conv2D(32, (3, 3), input_shape = (64, 64, 3), activation = 'relu'))
 
-model.add(Flatten())
+# Step 2 - Pooling
+classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
-model.add(Dense(100,activation='relu'))
-model.add(BatchNormalization())
-model.add(Dense(10, activation='softmax'))
+# Adding a second convolutional layer
+classifier.add(Conv2D(32, (3, 3), activation = 'relu'))
+classifier.add(MaxPooling2D(pool_size = (2, 2)))
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-m2 = model.fit(train_norm,ytrain, epochs=10, batch_size=25, validation_data=(test_norm,ytest))
+# Step 3 - Flattening
+classifier.add(Flatten())
 
-pred = model.predict(test_norm)
+# Step 4 - Full connection
+classifier.add(Dense(units = 128, activation = 'relu'))
+classifier.add(Dense(units = 1, activation = 'sigmoid'))
 
-from sklearn.metrics import confusion_matrix, accuracy_score
-pred[0]
-np.round(pred[0],2)
+# Compiling the CNN
+classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
 
-# Plot the training and validation loss
-plt.figure(figsize=(12, 5))
+# Part 2 - Fitting the CNN to the images
 
-# Plot for Loss
-plt.subplot(1, 2, 1)
-plt.plot(m2.history['loss'], label='Training Loss')
-plt.plot(m2.history['val_loss'], label='Validation Loss')
-plt.title('Loss over Epochs')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
+from keras.preprocessing.image import ImageDataGenerator
 
-# Plot for Accuracy
-plt.subplot(1, 2, 2)
-plt.plot(m2.history['accuracy'], label='Training accuracy')
-plt.plot(m2.history['val_accuracy'], label='Validation accuracy')
-plt.title('precision over Epochs')
-plt.xlabel('Epochs')
-plt.ylabel('accuracy')
-plt.legend()
+train_datagen = ImageDataGenerator(rescale = 1./255,
+                                   shear_range = 0.2,
+                                   zoom_range = 0.2,
+                                   horizontal_flip = True)
 
-plt.tight_layout()
-plt.show()
+test_datagen = ImageDataGenerator(rescale = 1./255)
 
-from keras.preprocessing.image import load_img, img_to_array
-img = load_img('E://CNN/ship.jpg')
-img = img_to_array(img)
-img = img.reshape(1,32,32,3) 
-img = np.expand_dims(img, 0)
-img = img.astype('float32')
-img = img/255.0
+training_set = train_datagen.flow_from_directory('E:/Deep_Learning/Convolutional_Neural_Networks/dataset/training_set',
+                                                 target_size = (64, 64),
+                                                 batch_size = 32,
+                                                 class_mode = 'binary')
 
-pred = model.predict(img)
+test_set = test_datagen.flow_from_directory('E:/Deep_Learning/Convolutional_Neural_Networks/dataset/test_set',
+                                            target_size = (64, 64),
+                                            batch_size = 32,
+                                            class_mode = 'binary')
+
+classifier.fit_generator(training_set,
+                         steps_per_epoch = 8000,
+                         epochs = 25,
+                         validation_data = test_set,
+                         validation_steps = 2000)
+
+model.summary()
+
+import numpy as np
+from keras.preprocessing import image
+test_image = image.load_img('E:/Deep_Learning/Convolutional_Neural_Networks/dataset/pred/cat1.jpg', target_size = (64, 64))
+#test_img = ImageDataGenerator(rescale = 1./255)
+test_image = image.img_to_array(test_image)
+test_image = np.expand_dims(test_image, axis = 0)
+result = classifier.predict(test_image)
+training_set.class_indices
+result
+if result[0][0] == 1:
+    prediction = 'dog'
+else:
+    prediction = 'cat'
+    
+    
+epoch = 1
+8000/10 =  500    
